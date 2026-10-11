@@ -1,4 +1,4 @@
-name: 테스트용 APK 빌드
+name: 테스트용 APK 빌드 (정식 서명)
 
 on:
   push:
@@ -32,12 +32,24 @@ jobs:
       - name: 웹 자산 동기화
         run: npx cap sync android
 
-      - name: 디버그 APK 빌드
+      - name: 서명 키 파일 복원
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload-key.jks"
+
+      - name: 정식(릴리스) APK 빌드 (업로드 키로 서명)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/upload-key.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: 서명 키 파일 삭제
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload-key.jks"
 
       - name: APK 업로드
         uses: actions/upload-artifact@v4
         with:
           name: youngsaeng-test-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
