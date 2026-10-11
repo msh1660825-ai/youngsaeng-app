@@ -1,0 +1,77 @@
+name: 플레이스토어용 AAB 빌드
+
+# 깃허브 저장소 > Actions > "플레이스토어용 AAB 빌드" > Run workflow 를 눌러 수동 실행합니다.
+# 실행할 때 버전 번호를 입력합니다. (버전 코드는 플레이스토어에 올릴 때마다 반드시 1씩 커져야 함)
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: '버전 코드 (정수, 올릴 때마다 +1 — 예: 1, 2, 3 ...)'
+        required: true
+        default: '1'
+      version_name:
+        description: '버전 이름 (사용자에게 보이는 버전 — 예: 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 서명 키 비밀값 확인
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for v in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Settings > Secrets and variables > Actions 에 $v 가 등록되지 않았습니다. 배포가이드 2단계를 확인하세요."; exit 1; fi
+          done
+
+      - name: Node.js 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 패키지 설치
+        run: npm install
+
+      - name: Java 설치
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: gradlew 실행 권한 부여
+        run: chmod +x android/gradlew
+
+      - name: 웹 자산 동기화
+        run: npx cap sync android
+
+      - name: 서명 키 파일 복원
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload-key.jks"
+
+      - name: AAB 빌드 (서명 포함)
+        working-directory: android
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/upload-key.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_CODE: ${{ github.event.inputs.version_code }}
+          VERSION_NAME: ${{ github.event.inputs.version_name }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: 서명 키 파일 삭제
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload-key.jks"
+
+      - name: AAB 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: youngsaeng-aab-v${{ github.event.inputs.version_name }}-${{ github.event.inputs.version_code }}
+          path: android/app/build/outputs/bundle/release/app-release.aab

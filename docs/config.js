@@ -3,5 +3,5 @@
 //   GitHub Pages를 켠 뒤 "https://<깃허브아이디>.github.io/<저장소이름>/access.json" 형태로 적으세요.
 //   비워두면 앱 안에 들어있는 기본 코드(비공개 테스트용)만 통합니다.
 window.APP_CONFIG = {
-  activationUrl: ""
+  activationUrl: "https://msh1660825-ai.github.io/youngsaeng-app/access.json"
 };
