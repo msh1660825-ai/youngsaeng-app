@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">영생 업무 도우미</string>
+    <string name="title_activity_main">영생 업무 도우미</string>
+    <string name="package_name">com.youngsaeng.tinterconverter</string>
+    <string name="custom_url_scheme">com.youngsaeng.tinterconverter</string>
+</resources>
