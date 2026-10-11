@@ -1,4 +1,4 @@
-const CACHE_NAME = 'youngsaeng-web-20261011';
+const CACHE_NAME = 'youngsaeng-web-20261011b';
 const PRECACHE_URLS = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {

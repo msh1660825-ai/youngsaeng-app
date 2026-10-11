@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 안드로이드 11 이하: 백업 시 앱 데이터 전체 포함 -->
+<full-backup-content>
+    <include domain="root" path="." />
+</full-backup-content>

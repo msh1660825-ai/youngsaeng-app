@@ -29,6 +29,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // One UI 9.0부터 디버깅 옵션이 켜진 앱이 최근 앱 목록에서 열리지 않는 문제가 있어 꺼둠
+            debuggable false
+        }
         release {
             if (System.getenv("KEYSTORE_PATH")) { signingConfig signingConfigs.release }
             minifyEnabled false
